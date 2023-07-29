@@ -89,17 +89,6 @@ func SelectUsers(ctx context.Context) ([]models.User, error) {
 	return users, nil
 }
 
-// AddUser добавляет нового пользователя в базу данных.
-// @Summary Добавление пользователя
-// @Description Добавляет нового пользователя в базу данных.
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param user body models.User true "Данные пользователя"
-// @Success 200 {string} string "Inserted successfully"
-// @Failure 400 {string} string "Bad Request"
-// @Failure 500 {string} string "Internal Server Error"
-// @Router /users [post]
 func AddUser(ctx context.Context, user models.User) (string, error) {
 	//var user models.User
 

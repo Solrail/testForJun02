@@ -14,13 +14,13 @@ import (
 	"time"
 )
 
-// Add new user in base
+// Add new User in base
 // @Summary      Add user into db
 // @Description  add user
 // @Tags         add
 // @Accept       json
 // @Produce      json
-// @Param        user body  models.User true "Add user"
+// @Param        user body models.User true "Add user" exclude:id
 // @Success      200  {object} models.User
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
@@ -61,8 +61,18 @@ func Add(c echo.Context) error {
 	return nil
 }
 
+// GetById returns the user by ID
+// @Summary Get user by ID
+// @Description Get user by ID
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id body int true "User ID"
+// @Success 200 {object} models.User
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /user [get]
 func GetById(c echo.Context) error {
-
 	var data map[string]int
 
 	err := json.NewDecoder(c.Request().Body).Decode(&data)
@@ -98,8 +108,15 @@ func GetById(c echo.Context) error {
 	return nil
 }
 
+// GetAll returns all users
+// @Summary Get all users
+// @Description Get all users
+// @Tags users
+// @Produce json
+// @Success 200 {array} string
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /users [get]
 func GetAll(c echo.Context) error {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -118,11 +135,18 @@ func GetAll(c echo.Context) error {
 	return nil
 }
 
+// DelById deletes a user by ID
+// @Summary Delete user by ID
+// @Description Delete user by ID
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id body integer true "User ID"
+// @Success 200 {string} string "User deleted successfully"
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /deluser [delete]
 func DelById(c echo.Context) error {
-
-	/*	w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Content-Type", "application/json")*/
-
 	var data map[string]int
 
 	err := json.NewDecoder(c.Request().Body).Decode(&data)
