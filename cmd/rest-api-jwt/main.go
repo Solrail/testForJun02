@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"net/http"
 	_ "testForJun02/docs"
 	"testForJun02/internal/controllers"
 )
@@ -15,7 +16,15 @@ import (
 //
 // @host localhost:8080
 // @BasePath /
+
+func test(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func main() {
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", test)
 
 	e := echo.New()
 
@@ -23,16 +32,19 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// @Router /adduser [post]
-	e.POST("/adduser", controllers.Add)
+	e.POST("/adduser", controllers.Add, controllers.CheckAuth)
 
 	// @Router /user [get]
-	e.GET("/user", controllers.GetById)
+	e.GET("/user", controllers.GetById, controllers.CheckAuth)
 
 	// @Router /users [get]
-	e.GET("/users", controllers.GetAll)
+	e.GET("/users", controllers.GetAll, controllers.CheckAuth)
 
 	// @Router /deluser [delete]
-	e.DELETE("/deluser", controllers.DelById)
+	e.DELETE("/deluser", controllers.DelById, controllers.CheckAuth)
+
+	// @Router /login [post]
+	e.POST("/login", controllers.Login)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 

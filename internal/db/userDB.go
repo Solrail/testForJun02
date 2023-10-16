@@ -147,3 +147,37 @@ func DelUser(ctx context.Context, id int) (string, error) {
 	return "Delete  successfully", nil
 
 }
+
+func CheckLogin(ctx context.Context, login models.Login) (bool, error) {
+	db := db.New()
+
+	err := db.LoadConfig("config/main.yml")
+	if err != nil {
+		fmt.Printf("Error load config %v", err)
+	}
+
+	conn, err := db.Connect(db.Postgres.DriverName)
+	if err != nil {
+		return false, errors.New("problem with connection")
+	}
+
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			err = fmt.Errorf("connection not closed %w", err)
+			log.Println(err.Error())
+		}
+	}(conn)
+
+	var row models.Login
+	err = conn.QueryRowContext(ctx, "SELECT password FROM login where name = $1", login.Name).Scan(&row.Password)
+	if err != nil {
+		return false, errors.New("problem with select")
+	}
+
+	if row.Password != login.Password {
+		return false, errors.New("not correct password")
+	}
+
+	return true, nil
+}

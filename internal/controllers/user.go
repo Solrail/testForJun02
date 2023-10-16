@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"io"
 	"log"
@@ -26,6 +27,8 @@ import (
 // @Failure 500 {string} string "Internal Server Error"
 // @Router       /adduser [post]
 func Add(c echo.Context) error {
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	c.Response().Header().Set("Content-Type", "application/json")
 
 	var user models.User
 
@@ -73,6 +76,8 @@ func Add(c echo.Context) error {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /user [get]
 func GetById(c echo.Context) error {
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	c.Response().Header().Set("Content-Type", "application/json")
 	var data map[string]int
 
 	err := json.NewDecoder(c.Request().Body).Decode(&data)
@@ -117,6 +122,8 @@ func GetById(c echo.Context) error {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /users [get]
 func GetAll(c echo.Context) error {
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	c.Response().Header().Set("Content-Type", "application/json")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -147,6 +154,9 @@ func GetAll(c echo.Context) error {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /deluser [delete]
 func DelById(c echo.Context) error {
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	c.Response().Header().Set("Content-Type", "application/json")
+
 	var data map[string]int
 
 	err := json.NewDecoder(c.Request().Body).Decode(&data)
@@ -179,4 +189,71 @@ func DelById(c echo.Context) error {
 		log.Println(err.Error())
 	}
 	return nil
+}
+
+func Login(c echo.Context) error {
+	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+	c.Response().Header().Set("Content-Type", "application/json")
+	var login models.Login
+	err := json.NewDecoder(c.Request().Body).Decode(&login)
+	if err != nil {
+		errMsg := fmt.Errorf("wrong operation: %w", err)
+		return errMsg
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	res, err := db.CheckLogin(ctx, login)
+	if err != nil {
+		fmt.Println("3")
+		errMsg := fmt.Errorf("error of authorization: %w", err)
+		json.NewEncoder(c.Response()).Encode("error of authorization")
+		return errMsg
+	}
+	if res {
+		validToken := generateJWT()
+		err := json.NewEncoder(c.Response()).Encode(validToken)
+		if err != nil {
+			err = fmt.Errorf("something wrong with validToken %w", err)
+			log.Println(err.Error())
+		}
+	}
+
+	return nil
+}
+
+var secretKey = []byte("sdk;sd13axx")
+
+func generateJWT() string {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		err = fmt.Errorf("something wrong %w", err)
+		log.Println(err.Error())
+	}
+	return tokenString
+}
+
+func CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if c.Request().Header["Token"] != nil {
+			token, err := jwt.Parse(c.Request().Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("Some error")
+				}
+				return secretKey, nil
+			})
+			if err != nil {
+				return c.String(http.StatusUnauthorized, err.Error())
+			}
+
+			if token.Valid {
+				return next(c)
+			}
+		}
+		return c.String(http.StatusUnauthorized, "Not Authorized")
+	}
 }

@@ -12,3 +12,10 @@ type User struct {
 	// @format date
 	Birthday interface{} `json:"birthday"`
 }
+
+type Login struct {
+	// Login is the name
+	Name interface{} `json:"name"`
+	// Password is the name
+	Password interface{} `json:"password"`
+}
