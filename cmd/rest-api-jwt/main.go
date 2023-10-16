@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"net/http"
 	_ "testForJun02/docs"
 	"testForJun02/internal/controllers"
 )
@@ -17,14 +16,7 @@ import (
 // @host localhost:8080
 // @BasePath /
 
-func test(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func main() {
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", test)
 
 	e := echo.New()
 
