@@ -80,6 +80,7 @@ func GetById(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "application/json")
 	var data map[string]int
 
+	fmt.Println(json.NewDecoder(c.Request().Body))
 	err := json.NewDecoder(c.Request().Body).Decode(&data)
 	if err != nil {
 		errMsg := fmt.Errorf("wrong operation: %w", err)
@@ -205,7 +206,6 @@ func Login(c echo.Context) error {
 
 	res, err := db.CheckLogin(ctx, login)
 	if err != nil {
-		fmt.Println("3")
 		errMsg := fmt.Errorf("error of authorization: %w", err)
 		json.NewEncoder(c.Response()).Encode("error of authorization")
 		return errMsg
@@ -222,14 +222,16 @@ func Login(c echo.Context) error {
 	return nil
 }
 
-var secretKey = []byte("sdk;sd13axx")
+var secretKey = "qweasdzxc"
 
 func generateJWT() string {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
+	exp := time.Now().Add(time.Hour * 72).Unix()
+	claim := jwt.MapClaims{
+		"exp": exp,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 
-	tokenString, err := token.SignedString(secretKey)
+	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		err = fmt.Errorf("something wrong %w", err)
 		log.Println(err.Error())
@@ -240,17 +242,29 @@ func generateJWT() string {
 func CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if c.Request().Header["Token"] != nil {
+			fmt.Println("1")
 			token, err := jwt.Parse(c.Request().Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+				fmt.Println("2")
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					fmt.Println("3")
 					return nil, fmt.Errorf("Some error")
 				}
-				return secretKey, nil
+				fmt.Println("4")
+				return []byte(secretKey), nil
 			})
 			if err != nil {
+				fmt.Println("5")
 				return c.String(http.StatusUnauthorized, err.Error())
 			}
 
 			if token.Valid {
+				var data map[string]int
+				json.NewDecoder(c.Request().Body).Decode(&data)
+
+				for v, k := range data {
+					fmt.Println(v, k)
+				}
+				fmt.Println("6")
 				return next(c)
 			}
 		}
