@@ -258,13 +258,13 @@ func CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			if token.Valid {
-				var data map[string]int
+				/*var data map[string]int
 				json.NewDecoder(c.Request().Body).Decode(&data)
 
 				for v, k := range data {
 					fmt.Println(v, k)
 				}
-				fmt.Println("6")
+				fmt.Println("6")*/
 				return next(c)
 			}
 		}
